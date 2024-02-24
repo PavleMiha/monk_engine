@@ -7,3 +7,9 @@
 [submodule "glm"]
 	path = glm
 	url = https://github.com/g-truc/glm
+[submodule "bimg"]
+	path = bimg
+	url = https://github.com/bkaradzic/bimg
+[submodule "glfw"]
+	path = glfw
+	url = https://github.com/glfw/glfw
