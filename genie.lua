@@ -17,6 +17,7 @@ IMGUI_DIR		= path.join(BGFX_DIR, "3rdparty/dear-imgui")
 function copyLib()
 end
 
+
 solution "app"
 	language				"C++"
 	configurations			{ "Debug", "Release" }
@@ -116,12 +117,6 @@ solution "app"
 	dofile (path.join(BIMG_DIR, "scripts/bimg_decode.lua"))
 	dofile (path.join(BGFX_DIR, "scripts/bgfx.lua"))
 
-	dofile (path.join(BGFX_DIR, "scripts/shaderc.lua"))
-	dofile (path.join(BGFX_DIR, "scripts/texturec.lua"))
-	dofile (path.join(BGFX_DIR, "scripts/texturev.lua"))
-	dofile (path.join(BGFX_DIR, "scripts/geometryc.lua"))
-	dofile (path.join(BGFX_DIR, "scripts/geometryv.lua"))
-
 	bgfxProject("", "StaticLib", {})
 
 	project "entry"
@@ -207,7 +202,8 @@ solution "app"
 							"bimg_decode",
 							"bx",
 							"imgui",
-							"entry"
+							"entry",
+							"shaderc"
 		}
 	
 		configuration		"Debug"
@@ -218,7 +214,29 @@ solution "app"
 			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
-		configuration {}
+		configurations {}
+
+		--matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.sc"))
+
+		--printf("path: %s", path.join(PROJECT_DIR, "assets/**.sc"))
+
+		--local length = #matches
+
+		--printf ("length %i, ", length)
+
+		--for i = 1, length do
+		--	printf(matches[i])
+		--	printf(path.join(path.join(PROJECT_RUNTIME_DIR, "shaders/dx11"), path.getbasename(matches[i])) .. ".bin")
+		--	printf(path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<)")
+
+		--	custombuildtask {
+		--		{ matches[i], matches[i] .. ".bin", { }, {path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<)"}}
+		--	}
+    	--end
+
+		custombuildtask {
+        	{ path.join(PROJECT_DIR, "assets/vs_cubes.sc") , path.join(PROJECT_BUILD_DIR, "vs_cubes.bin"), {path.join(PROJECT_DIR, "scripts/build_shader_win.bat")}, {"@echo $(<) > $(@)" }},
+    	}
 
 		configuration { "vs*" }
 		buildoptions
@@ -248,3 +266,12 @@ solution "app"
 			"/DELAYLOAD:\"libEGL.dll\"",
 			"/DELAYLOAD:\"libGLESv2.dll\"",
 		}
+
+	configuration {}
+
+	group "tools"
+	dofile (path.join(BGFX_DIR, "scripts/shaderc.lua"))
+	dofile (path.join(BGFX_DIR, "scripts/texturec.lua"))
+	dofile (path.join(BGFX_DIR, "scripts/texturev.lua"))
+	dofile (path.join(BGFX_DIR, "scripts/geometryc.lua"))
+	dofile (path.join(BGFX_DIR, "scripts/geometryv.lua"))
