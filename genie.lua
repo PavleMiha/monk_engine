@@ -6,11 +6,11 @@ local PROJECT_PROJECTS_DIR = path.join(PROJECT_DIR, "build/")
 local PROJECT_RUNTIME_DIR  = path.join(PROJECT_BUILD_DIR, "bin/")
 local DEPENDENCY_ROOT_DIR  = PROJECT_DIR
 
-BGFX_DIR        = path.join(DEPENDENCY_ROOT_DIR, "bgfx")
-BX_DIR          = path.join(DEPENDENCY_ROOT_DIR, "bx")
-BIMG_DIR        = path.join(DEPENDENCY_ROOT_DIR, "bimg")
-GLFW_DIR 		= path.join(DEPENDENCY_ROOT_DIR, "glfw")
-GLM_DIR			= path.join(DEPENDENCY_ROOT_DIR, "glm")
+BGFX_DIR        = path.join(DEPENDENCY_ROOT_DIR, "3rdparty/bgfx")
+BX_DIR          = path.join(DEPENDENCY_ROOT_DIR, "3rdparty/bx")
+BIMG_DIR        = path.join(DEPENDENCY_ROOT_DIR, "3rdparty/bimg")
+GLFW_DIR 		= path.join(DEPENDENCY_ROOT_DIR, "3rdparty/glfw")
+GLM_DIR			= path.join(DEPENDENCY_ROOT_DIR, "3rdparty/glm")
 IMGUI_DIR		= path.join(BGFX_DIR, "3rdparty/dear-imgui")
 
 -- Required for bgfx and example-common
@@ -21,7 +21,7 @@ end
 solution "app"
 	language				"C++"
 	configurations			{ "Debug", "Release" }
-	platforms				{ "x32", "x64" }
+	platforms				{ "x64" }
 
 	defines {
 		"ENTRY_CONFIG_IMPLEMENT_DEFAULT_ALLOCATOR=1",
@@ -172,7 +172,6 @@ solution "app"
 	project "app"
 		--uuid				"e0ba3c4d-338b-4517-8bbd-b29311fd6830"
 		kind				"WindowedApp"
-		targetdir			(PROJECT_RUNTIME_DIR)
 
 		files {
 							"./src/**.cpp",
@@ -214,29 +213,25 @@ solution "app"
 			targetsuffix	"_r"
 			flags			{ "Optimize" }
 
-		configurations {}
+		configuration {}
+		debugdir			(PROJECT_RUNTIME_DIR)
+		targetdir			(PROJECT_RUNTIME_DIR)
 
-		--matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.sc"))
+		matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.sc"))
 
-		--printf("path: %s", path.join(PROJECT_DIR, "assets/**.sc"))
-
-		--local length = #matches
-
-		--printf ("length %i, ", length)
-
-		--for i = 1, length do
-		--	printf(matches[i])
-		--	printf(path.join(path.join(PROJECT_RUNTIME_DIR, "shaders/dx11"), path.getbasename(matches[i])) .. ".bin")
-		--	printf(path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<)")
-
-		--	custombuildtask {
-		--		{ matches[i], matches[i] .. ".bin", { }, {path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<)"}}
-		--	}
-    	--end
-
-		custombuildtask {
-        	{ path.join(PROJECT_DIR, "assets/vs_cubes.sc") , path.join(PROJECT_BUILD_DIR, "vs_cubes.bin"), {path.join(PROJECT_DIR, "scripts/build_shader_win.bat")}, {"@echo $(<) > $(@)" }},
-    	}
+		for i,file in pairs(matches) do
+			if not string.find(file, "def.") then
+				local shader_type = "vertex"
+				if string.find(file, "fs_") then shader_type = "fragment" end
+				custombuildtask {
+					{ file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin", { },
+					{"echo "..path.join(PROJECT_DIR, "scripts/build_shader_win.bat"),
+					 "echo " .. " $(<) ",
+					 "call " .. path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<) " .. shader_type}}
+-- see https://stackoverflow.com/questions/3686837/why-are-my-custom-build-steps-not-running-in-visual-studio for why we need "call"
+				}
+			end
+    	end
 
 		configuration { "vs*" }
 		buildoptions
