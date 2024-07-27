@@ -138,7 +138,6 @@ solution "app"
 			IMGUI_DIR
 		}
 
-
 	project "imgui"
 		kind "StaticLib"
 		language "C++"
@@ -169,6 +168,7 @@ solution "app"
 		}
 
 	startproject "app"
+	
 	project "app"
 		--uuid				"e0ba3c4d-338b-4517-8bbd-b29311fd6830"
 		kind				"WindowedApp"
