@@ -42,7 +42,7 @@ typedef double f64;
 typedef int b32;
 
 /** @brief 8-bit boolean type */
-typedef _Bool b8;
+typedef bool b8;
 
 #define INVALID_ID_U64 18446744073709551615UL
 #define INVALID_ID 4294967295U

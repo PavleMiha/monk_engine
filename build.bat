@@ -18,3 +18,5 @@ IF "%1"=="" (
 )
 
 build\genie.exe %*
+
+start build\projects\%*\app.sln
