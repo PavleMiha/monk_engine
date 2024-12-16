@@ -1,6 +1,7 @@
 /*
  * Copyright 2024 Pavle Mihajlovic
  */
+#pragma once
 
 #include "types.h"
 #include <atomic>
@@ -33,3 +34,5 @@ struct ResizeEvent
 };
 
 extern std::atomic<u8> s_keyMap[GLFW_KEY_LAST];
+
+bool isPressed(u32 key);

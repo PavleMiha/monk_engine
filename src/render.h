@@ -2,6 +2,9 @@
  * Copyright 2024 Pavle Mihajlovic. All rights reserved.
  */
 
+#pragma once
+
+
 #include "types.h"
 #include <bx/thread.h>
 #include <bgfx/bgfx.h>

@@ -138,6 +138,13 @@ solution "app"
 			IMGUI_DIR
 		}
 
+	project "glm"
+		kind "StaticLib"
+		language "C++"
+		files {
+			path.join(GLM_DIR, "**.hpp")
+		}
+
 	project "imgui"
 		kind "StaticLib"
 		language "C++"

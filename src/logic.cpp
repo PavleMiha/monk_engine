@@ -11,6 +11,10 @@
 #include "logo.h"
 #include "bx/os.h"
 #include "bx/timer.h"
+//#include "math.h"
+
+
+#include <cstdio>
 
 extern bx::SpScUnboundedQueue s_keyEvents;
 
@@ -36,14 +40,52 @@ i32 runLogicThread(bx::Thread* self, void* userData)
 			if (*ev == EventType::Key) {
 				auto keyEvent = (KeyEvent*)ev;
 				if (keyEvent->key == GLFW_KEY_F1 && keyEvent->action == GLFW_RELEASE)
-					g_gameState.showStats= !g_gameState.showStats;
+					g_gameState.renderState.showStats= !g_gameState.renderState.showStats;
 
 			}
 		}
 
 
 		if (s_keyMap[GLFW_KEY_RIGHT].load())
-			g_gameState.dummy+= delta;
+			g_gameState.renderState.dummy+= delta;
+
+		static const f32 speed = 5.0f;
+
+		//glm::vec3 forward = glm::vecto
+
+	//	glm::mat4 rotation = glm::rotate(glm::mat4(1.0f), yaw, glm::vec3(0, 1, 0)) * glm::rotate(glm::mat4(1.0f), pitch, glm::vec3(1, 0, 0));
+		if (isPressed(GLFW_KEY_W)) {
+			g_gameState.renderState.cameraPos.z += delta * speed;
+		}
+		if (isPressed(GLFW_KEY_S)) {
+			g_gameState.renderState.cameraPos.z -= delta * speed;
+		}
+		if (isPressed(GLFW_KEY_A)) {
+			g_gameState.renderState.cameraPos.x += delta * speed;
+		}
+		if (isPressed(GLFW_KEY_D)) {
+			g_gameState.renderState.cameraPos.x -= delta * speed;
+		}
+
+		static const f32 turnSpeed = 1.0f;
+
+		if (isPressed(GLFW_KEY_RIGHT)) {
+			g_gameState.renderState.cameraYaw += delta * turnSpeed;
+		}
+
+		if (isPressed(GLFW_KEY_LEFT)) {
+			g_gameState.renderState.cameraYaw -= delta * turnSpeed;
+		}
+		if (isPressed(GLFW_KEY_UP)) {
+			g_gameState.renderState.cameraPitch += delta * turnSpeed;
+		}
+
+		if (isPressed(GLFW_KEY_DOWN)) {
+			g_gameState.renderState.cameraPitch -= delta * turnSpeed;
+		}
+
+
+		printf("Camera pos %f %f %f\n", g_gameState.renderState.cameraPos.x, g_gameState.renderState.cameraPos.y, g_gameState.renderState.cameraPos.z);
 
 		//g_gameState.dummy = frameTime;
 
@@ -67,8 +109,7 @@ i32 runLogicThread(bx::Thread* self, void* userData)
 		}
 
 
-		renderState.dummy = g_gameState.dummy;
-		renderState.showStats = g_gameState.showStats;
+		memcpy(&renderState, &g_gameState.renderState, sizeof(RenderState));
 
 		renderState.timeGenerated = frameCounter;
 		g_renderState[renderStateIndex].isBusy.store(false);

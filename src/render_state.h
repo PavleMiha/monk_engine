@@ -2,6 +2,9 @@
  * Copyright 2024 Pavle Mihajlovic. All rights reserved.
  */
 
+#pragma once
+
+
 #include "types.h"
 #include <atomic>
 #include <bx/math.h>
@@ -17,8 +20,9 @@ struct RenderState
 	f32				  dummy;
 	bool			  showStats;
 
-	bx::Vec3 at = { 0.0f, 0.0f,  0.0f };
-	bx::Vec3 eye = { 0.0f, 0.0f, -35.f };
+	glm::vec3		  cameraPos   = { 0.0f, 0.0f, -30.0f };
+	f32				  cameraPitch = 0.0f;
+	f32				  cameraYaw   = 0.0f;
 
 };
 

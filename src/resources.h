@@ -2,6 +2,8 @@
  * Copyright 2024 Pavle Mihajlovic. All rights reserved.
  */
 
+#pragma once
+
 #include <bgfx/bgfx.h>
 #include "vertex.h"
 

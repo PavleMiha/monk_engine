@@ -10,7 +10,6 @@
 #include "logo.h"
 #include "bx/os.h"
 #include "bx/math.h"
-#include "glm/glm.hpp"
 #include "resources.h"
 
 extern bx::SpScUnboundedQueue s_systemEvents;
@@ -31,7 +30,7 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 	// Set view 0 to the same dimensions as the window and to clear the color buffer.
 	const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR, 0xFF88FFFF);
+	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR | BGFX_CLEAR_DEPTH, 0x302030ff);
 	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 	uint32_t width = args->width;
 	uint32_t height = args->height;
@@ -76,8 +75,12 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
 		//bgfx::touch(kClearView);
 
+		float rotate[16];
+		bx::mtxRotateXY(rotate, renderState.cameraPitch+bx::kPi, renderState.cameraYaw);
+		float translate[16];
+		bx::mtxTranslate(translate, renderState.cameraPos.x, renderState.cameraPos.y, renderState.cameraPos.z);
 		float view[16];
-		bx::mtxLookAt(view, renderState.eye, renderState.at);
+		bx::mtxMul(view, translate, rotate);
 
 		float proj[16];
 		bx::mtxProj(proj, 60, float(width) / float(height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
@@ -85,11 +88,12 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 		bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
 
-		for (int i = -10; i < 10; i++) {
-			for (int j = -10; j < 10; j++) {
-				for (int k = -10; k < 10; k++) {
+		const i32 fieldSize = 3;
+		for (int i = -fieldSize; i <= fieldSize; i++) {
+			for (int j = -fieldSize; j <= fieldSize; j++) {
+				for (int k = -fieldSize; k <= fieldSize; k++) {
 					float mtx[16];
-					bx::mtxTranslate(mtx, i * 2, j * 2, k * 2);
+					bx::mtxTranslate(mtx, i * 5, j * 5, k * 5);
 
 					bgfx::setTransform(mtx);
 					// Set vertex and index buffer.

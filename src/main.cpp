@@ -97,32 +97,11 @@ int main(int argc, char **argv)
 	glfwGetWindowSize(window, &width, &height);
 	apiThreadArgs.width = (uint32_t)width;
 	apiThreadArgs.height = (uint32_t)height;
-	//bx::Thread apiThread;
-	//apiThread.init(runRenderThread, &apiThreadArgs);
+	bx::Thread apiThread;
+	apiThread.init(runRenderThread, &apiThreadArgs);
 
-
-
-
-	bgfx::Init init;
-	init.platformData.nwh = glfwGetWin32Window(window);// args->platformData;
-	init.resolution.width = apiThreadArgs.width;
-	init.resolution.height = apiThreadArgs.height;
-	init.resolution.reset = BGFX_RESET_VSYNC;
-	if (!bgfx::init(init))
-		return 1;
-
-	loadResources();
-
-	// Set view 0 to the same dimensions as the window and to clear the color buffer.
-	const bgfx::ViewId kClearView = 0;
-	bgfx::setViewClear(kClearView, BGFX_CLEAR_COLOR, 0xFF88FFFF);
-	bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
-
-
-
-
-	//bx::Thread logicThread;
-	//logicThread.init(runLogicThread, nullptr);
+	bx::Thread logicThread;
+	logicThread.init(runLogicThread, nullptr);
 
 	// Run GLFW message pump.
 	bool exit = false;
@@ -143,74 +122,13 @@ int main(int argc, char **argv)
 			s_systemEvents.push(resize);
 		}
 
-
-
-		// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
-		//bgfx::touch(kClearView);
-
-		float view[16];
-
-		bx::Vec3 at = { 0.0f, 0.0f,  0.0f };
-		bx::Vec3 eye = { 0.0f, 0.0f, -35.f };
-
-		bx::mtxLookAt(view, eye, at);
-
-		float proj[16];
-		bx::mtxProj(proj, 60, float(width) / float(height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-		bgfx::setViewTransform(0, view, proj);
-
-		bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
-
-		for (int i = -10; i < 10; i++) {
-			for (int j = -10; j < 10; j++) {
-				for (int k = -10; k < 10; k++) {
-					float mtx[16];
-					bx::mtxTranslate(mtx, i * 2, j * 2, k * 2);
-
-					bgfx::setTransform(mtx);
-					// Set vertex and index buffer.
-					bgfx::setVertexBuffer(0, g_resources.m_vbh);
-					bgfx::setIndexBuffer(g_resources.m_ibh);
-
-					u64 state = BGFX_STATE_WRITE_R
-						| BGFX_STATE_WRITE_G
-						| BGFX_STATE_WRITE_B
-						| BGFX_STATE_WRITE_A
-						| BGFX_STATE_WRITE_Z
-						| BGFX_STATE_DEPTH_TEST_LESS
-						//| BGFX_STATE_CULL_CW
-						| BGFX_STATE_MSAA;
-					// BGFX_STATE_PT_TRISTRIP;
-
-					// Set render states.
-					bgfx::setState(state);
-
-					bgfx::submit(0, g_resources.vertexColorProgram);
-
-				}
-			}
-		}
-
-		bgfx::frame();
-
-
-
-
-
-
-
-
-
-
-
-
 		// Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
-		//bgfx::renderFrame();
+		bgfx::renderFrame();
 	}
 	// Wait for the API thread to finish before shutting down.
 	while (bgfx::RenderFrame::NoContext != bgfx::renderFrame()) {}
-	//apiThread.shutdown();
-	//logicThread.shutdown();
+	apiThread.shutdown();
+	logicThread.shutdown();
 	glfwTerminate();
-	return 0;// apiThread.getExitCode();
+	return apiThread.getExitCode();
 }

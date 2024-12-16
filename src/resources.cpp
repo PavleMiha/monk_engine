@@ -91,7 +91,6 @@ static bgfx::ShaderHandle loadShader(bx::FileReaderI* _reader, const char* _name
 	return handle;
 }
 
-
 bgfx::ProgramHandle loadProgram(bx::FileReaderI* _reader, const char* _vsName, const char* _fsName)
 {
 	bgfx::ShaderHandle vsh = loadShader(_reader, _vsName);
@@ -104,16 +103,29 @@ bgfx::ProgramHandle loadProgram(bx::FileReaderI* _reader, const char* _vsName, c
 	return bgfx::createProgram(vsh, fsh, true /* destroy shaders when program is destroyed */);
 }
 
+
+static 	bx::FileReaderI* s_fileReader = NULL;
+static 	bx::FileWriterI* s_fileWriter = NULL;
+
+bgfx::ProgramHandle loadProgram(const char* _vsName, const char* _fsName)
+{
+
+	if (!s_fileReader) {
+		s_fileReader = BX_NEW(getDefaultAllocator(), bx::FileReader);
+		s_fileWriter = BX_NEW(getDefaultAllocator(), bx::FileWriter);
+	}
+
+	return loadProgram(s_fileReader, _vsName, _fsName);
+}
+
+
 bool loadResources() {
 	
 	PosColorVertex::init();
-
-	bx::FileReaderI* s_fileReader = NULL;
-	bx::FileWriterI* s_fileWriter = NULL;
-
-	s_fileReader = BX_NEW(getDefaultAllocator(), bx::FileReader);
-	s_fileWriter = BX_NEW(getDefaultAllocator(), bx::FileWriter);
-
+	if (!s_fileReader) {
+		s_fileReader = BX_NEW(getDefaultAllocator(), bx::FileReader);
+		s_fileWriter = BX_NEW(getDefaultAllocator(), bx::FileWriter);
+	}
 	g_resources.vertexColorProgram = loadProgram(s_fileReader, "vs_cubes", "fs_cubes");
 
 	g_resources.m_vbh = bgfx::createVertexBuffer(
