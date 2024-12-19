@@ -10,9 +10,50 @@
 #include "logo.h"
 #include "bx/os.h"
 #include "bx/math.h"
+#include "bx/timer.h"
 #include "resources.h"
+#include "imgui/imgui.h"
 
+#define RENDER_TIMES_BUFFER_SIZE 30
 extern bx::SpScUnboundedQueue s_systemEvents;
+extern std::atomic<f64> g_averageMainFrameTime;
+f32 frameTimes[RENDER_TIMES_BUFFER_SIZE];
+i32 frameTimesIndex = 0;
+i64 lastFrameCounter = 0;
+
+void drawCube(float x, float y, float z) {
+
+	const i32 fieldSize = 3;
+	float mtx[16];
+	bx::mtxTranslate(mtx, x, y, z);
+
+	bgfx::setTransform(mtx);
+	// Set vertex and index buffer.
+	bgfx::setVertexBuffer(0, g_resources.m_vbh);
+	bgfx::setIndexBuffer(g_resources.m_ibh);
+
+	u64 state = BGFX_STATE_WRITE_R
+		| BGFX_STATE_WRITE_G
+		| BGFX_STATE_WRITE_B
+		| BGFX_STATE_WRITE_A
+		| BGFX_STATE_WRITE_Z
+		| BGFX_STATE_DEPTH_TEST_LESS
+		| BGFX_STATE_CULL_CCW
+		| BGFX_STATE_MSAA
+		| 0;// BGFX_STATE_PT_TRISTRIP;
+
+	// Set render states.
+	bgfx::setState(state);
+
+	bgfx::submit(0, g_resources.vertexColorProgram);
+
+}
+
+void showStatWindow() {
+	ImGui::Begin("Stats");
+	ImGui::Text("Test");
+	ImGui::End();
+}
 
 i32 runRenderThread(bx::Thread *self, void *userData)
 {
@@ -27,6 +68,8 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		return 1;
 
 	loadResources();
+
+	imguiCreate();
 
 	// Set view 0 to the same dimensions as the window and to clear the color buffer.
 	const bgfx::ViewId kClearView = 0;
@@ -72,53 +115,68 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 		const RenderState& renderState = g_renderState[renderStateIndex];
 
-		// This dummy draw call is here to make sure that view 0 is cleared if no other draw calls are submitted to view 0.
-		//bgfx::touch(kClearView);
+		f64 cursorPos[2] = {};
+		glfwGetCursorPos(args->window, &cursorPos[0], &cursorPos[1]);
+		i32 leftMouseButton = glfwGetMouseButton(args->window, GLFW_MOUSE_BUTTON_LEFT);
+		i32 middleMouseButton = glfwGetMouseButton(args->window, GLFW_MOUSE_BUTTON_MIDDLE);
+		i32 rightMouseButton = glfwGetMouseButton(args->window, GLFW_MOUSE_BUTTON_RIGHT);
 
-		float rotate[16];
-		bx::mtxRotateXY(rotate, renderState.cameraPitch+bx::kPi, renderState.cameraYaw);
-		float translate[16];
-		bx::mtxTranslate(translate, renderState.cameraPos.x, renderState.cameraPos.y, renderState.cameraPos.z);
-		float view[16];
-		bx::mtxMul(view, translate, rotate);
+		imguiBeginFrame(cursorPos[0]//m_mouseState.m_mx
+			, cursorPos[1]//m_mouseState.m_my
+			, (leftMouseButton ? IMGUI_MBUT_LEFT : 0)
+			| (rightMouseButton ? IMGUI_MBUT_RIGHT : 0)
+			| (middleMouseButton ? IMGUI_MBUT_MIDDLE : 0)
+			, 0//m_mouseState.m_mz
+			, uint16_t(width)
+			, uint16_t(height)
+		);
 
-		float proj[16];
-		bx::mtxProj(proj, 60, float(width) / float(height), 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
-		bgfx::setViewTransform(0, view, proj);
+		ImGui::Begin("Stats");
+		ImGui::Text("Logic thread: %.1lf, %.1lf", renderState.logicThreadDeltaAverage, 1.0 / renderState.logicThreadDeltaAverage);
 
+		f64 averageTime = 0.0f;
+		for (int i = 0; i < RENDER_TIMES_BUFFER_SIZE; i++) {
+			averageTime += frameTimes[i];
+		}
+		averageTime /= (f64)RENDER_TIMES_BUFFER_SIZE;
+
+		ImGui::Text("Render thread: %.1lf, %.1lf", averageTime, 1.0 / averageTime);
+
+		f64 mainThreadTime = g_averageMainFrameTime.load();
+		ImGui::Text("Main thread: %.1lf, %.1lf", mainThreadTime, 1.0 / mainThreadTime);
+
+		ImGui::End();
+		imguiEndFrame();
+
+		Camera camera = renderState.camera;
+		camera.m_horizontalFOV = 60.f;
+		camera.m_aspectRatio = (f32)width / (f32)height;
+		camera.m_homogenousDepth = bgfx::getCaps()->homogeneousDepth;
+
+		mat4 view;
+		camera.getViewMat(&view);
+
+		mat4 proj;
+		camera.getProjMat(&proj);
+
+
+		bgfx::setViewTransform(0, &view[0], &proj[0]);
 		bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
 
-		const i32 fieldSize = 3;
-		for (int i = -fieldSize; i <= fieldSize; i++) {
-			for (int j = -fieldSize; j <= fieldSize; j++) {
-				for (int k = -fieldSize; k <= fieldSize; k++) {
-					float mtx[16];
-					bx::mtxTranslate(mtx, i * 5, j * 5, k * 5);
+		drawCube(0.0f, 0.0f, 0.0f);
+		drawCube(0.0f, 5.0f, 0.0f);
+		drawCube(5.0f, 0.0f, 0.0f);
+		drawCube(0.0f, 0.0f, 5.0f);
 
-					bgfx::setTransform(mtx);
-					// Set vertex and index buffer.
-					bgfx::setVertexBuffer(0, g_resources.m_vbh);
-					bgfx::setIndexBuffer(g_resources.m_ibh);
+		// Create view matrix
+		/*mat4 glmview = createViewMatrix(renderState.cameraYaw, renderState.cameraPitch, renderState.cameraPos);
 
-					u64 state = BGFX_STATE_WRITE_R
-						| BGFX_STATE_WRITE_G
-						| BGFX_STATE_WRITE_B
-						| BGFX_STATE_WRITE_A
-						| BGFX_STATE_WRITE_Z
-						| BGFX_STATE_DEPTH_TEST_LESS
-						| BGFX_STATE_CULL_CW
-						| BGFX_STATE_MSAA
-						| 0;// BGFX_STATE_PT_TRISTRIP;
-
-					// Set render states.
-					bgfx::setState(state);
-
-					bgfx::submit(0, g_resources.vertexColorProgram);
-
-				}
-			}
-		}
-
+		// Create projection matrix
+		mat4 glmproj = createProjectionMatrix(60.0f, aspectRatio, 0.1f, 100.0f, bgfx::getCaps()->homogeneousDepth);
+		
+		bgfx::setViewTransform(0, glm::value_ptr(glmview), glm::value_ptr(glmproj));
+		*/
+		
 
 		// Use debug font to print information about this example.
 		/*bgfx::dbgTextClear();
@@ -137,6 +195,12 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 		// Advance to next frame. Main thread will be kicked to process submitted rendering primitives.
 		//bx::sleep(50);
+
+		i64 currentCounter = bx::getHPCounter();
+		frameTimes[frameTimesIndex] = (f64)(currentCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
+		frameTimesIndex = (frameTimesIndex + 1) % RENDER_TIMES_BUFFER_SIZE;
+		lastFrameCounter = currentCounter;
+
 		g_renderState[renderStateIndex].isBusy.store(false);
 		bgfx::frame();
 	}

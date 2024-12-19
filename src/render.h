@@ -8,9 +8,11 @@
 #include "types.h"
 #include <bx/thread.h>
 #include <bgfx/bgfx.h>
+#include "GLFW/glfw3.h"
 
 struct RenderThreadArgs
 {
+	GLFWwindow* window;
 	bgfx::PlatformData platformData;
 	uint32_t width;
 	uint32_t height;

@@ -11,6 +11,7 @@ enum class EventType
 {
 	Exit,
 	Key,
+	Mouse,
 	Resize
 };
 
@@ -26,6 +27,13 @@ struct KeyEvent
 	int		  action;
 };
 
+struct MouseEvent
+{
+	EventType type = EventType::Mouse;
+	int		  button;
+	int		  action;
+};
+
 struct ResizeEvent
 {
 	EventType type = EventType::Resize;
@@ -33,6 +41,4 @@ struct ResizeEvent
 	u32		  height;
 };
 
-extern std::atomic<u8> s_keyMap[GLFW_KEY_LAST];
 
-bool isPressed(u32 key);

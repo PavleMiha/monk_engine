@@ -8,8 +8,10 @@
 #include <bx/bx.h>
 #include <bx/spscqueue.h>
 #include <bx/thread.h>
+#include <bx/timer.h>
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
+#include <imgui/imgui.h>
 #include <GLFW/glfw3.h>
 
 #if BX_PLATFORM_LINUX
@@ -39,12 +41,15 @@ bx::AllocatorI* getDefaultAllocator()
 	BX_PRAGMA_DIAGNOSTIC_POP();
 }
 
-std::atomic<u8> s_keyMap[GLFW_KEY_LAST];
 bx::SpScUnboundedQueue s_systemEvents(getDefaultAllocator());
 bx::SpScUnboundedQueue s_keyEvents(getDefaultAllocator());
+
 RenderState g_renderState[NUM_RENDER_STATES];
-GameState g_gameState;
 Resources g_resources;
+
+#define MAIN_LOOP_TIME_BUFFER_SIZE 30
+f64				 g_frameTimes[MAIN_LOOP_TIME_BUFFER_SIZE];
+std::atomic<f64> g_averageMainFrameTime;
 
 static void glfw_errorCallback(int error, const char *description)
 {
@@ -60,12 +65,16 @@ static void glfw_keyCallback(GLFWwindow *window, int key, int scancode, int acti
 	if (key < 0)//some system key, volume up/down for example
 		return;
 
-	if (keyEvent->action == GLFW_PRESS)
-		s_keyMap[keyEvent->key].store(true);
-	else if (keyEvent->action == GLFW_RELEASE)
-		s_keyMap[keyEvent->key].store(false);
-
 	s_keyEvents.push(keyEvent);
+}
+
+static void glfw_mouseCallback(GLFWwindow* window, int button, int action, int mods)
+{
+	auto mouseEvent = new MouseEvent;
+	mouseEvent->button = button;
+	mouseEvent->action = action;
+
+	s_keyEvents.push(mouseEvent);
 }
 
 
@@ -80,6 +89,8 @@ int main(int argc, char **argv)
 	if (!window)
 		return 1;
 	glfwSetKeyCallback(window, glfw_keyCallback);
+	glfwSetMouseButtonCallback(window, glfw_mouseCallback);
+
 	// Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
 	// Most graphics APIs must be used on the same thread that created the window.
 	bgfx::renderFrame();
@@ -93,18 +104,24 @@ int main(int argc, char **argv)
 #elif BX_PLATFORM_WINDOWS
 	apiThreadArgs.platformData.nwh = glfwGetWin32Window(window);
 #endif
+	apiThreadArgs.window = window;
 	int width, height;
 	glfwGetWindowSize(window, &width, &height);
 	apiThreadArgs.width = (uint32_t)width;
 	apiThreadArgs.height = (uint32_t)height;
 	bx::Thread apiThread;
+
 	apiThread.init(runRenderThread, &apiThreadArgs);
 
 	bx::Thread logicThread;
-	logicThread.init(runLogicThread, nullptr);
+	logicThread.init(runLogicThread, &apiThreadArgs);
+
 
 	// Run GLFW message pump.
 	bool exit = false;
+	i64 lastFrameCounter = bx::getHPCounter();
+	i32 frameTimeIndex = 0;
+
 	while (!exit) {
 		glfwPollEvents();
 		// Send window close event to the API thread.
@@ -124,7 +141,21 @@ int main(int argc, char **argv)
 
 		// Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
 		bgfx::renderFrame();
+
+		i64 currentCounter = bx::getHPCounter();
+		f64 frameTime = (f64)(bx::getHPCounter() - lastFrameCounter) / (f64)bx::getHPFrequency();
+		lastFrameCounter = currentCounter;
+
+		g_frameTimes[frameTimeIndex] = frameTime;
+		frameTimeIndex = (frameTimeIndex + 1) % FRAME_TIMES_BUFFER_SIZE;
+		f64 averageFrameTime = 0.0;
+		for (int i = 0; i < FRAME_TIMES_BUFFER_SIZE; i++) {
+			averageFrameTime += frameTime;
+		}
+		averageFrameTime /= FRAME_TIMES_BUFFER_SIZE;
+		g_averageMainFrameTime.store(averageFrameTime);
 	}
+
 	// Wait for the API thread to finish before shutting down.
 	while (bgfx::RenderFrame::NoContext != bgfx::renderFrame()) {}
 	apiThread.shutdown();
