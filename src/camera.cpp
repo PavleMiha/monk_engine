@@ -44,9 +44,9 @@ void Camera::getViewMat(mat4* out) const {
 
 void Camera::getProjMat(mat4* out) const {
 	if (m_homogenousDepth)
-		*out = (glm::perspectiveNO(glm::radians(m_horizontalFOV), m_aspectRatio, m_near, m_far));//-1 to 1
+		*out = (glm::perspectiveNO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//-1 to 1
 	else
-		*out = (glm::perspectiveZO(glm::radians(m_horizontalFOV), m_aspectRatio, m_near, m_far));//0 to 1
+		*out = (glm::perspectiveZO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//0 to 1
 
 	//bx::mtxProj(out->data, m_horizontalFOV, m_aspectRatio, m_near, m_far, m_homogenousDepth);
 }

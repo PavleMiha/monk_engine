@@ -15,10 +15,10 @@ struct Camera
 	f32  m_roll  = 0.0f;
 
 	f32	 m_aspectRatio	   = 1.0f;
-	f32  m_horizontalFOV   = 60.f;
+	f32  m_verticalFOV     = 60.f;
 	bool m_homogenousDepth = true;
 	f32  m_near			   = 0.1f;
-	f32  m_far			   = 100.0f;
+	f32  m_far			   = 1000.0f;
 
 	vec3 getForwardDirection() const;
 	vec3 getRightDirection()   const;

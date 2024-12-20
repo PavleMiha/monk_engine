@@ -149,7 +149,7 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		imguiEndFrame();
 
 		Camera camera = renderState.camera;
-		camera.m_horizontalFOV = 60.f;
+		camera.m_verticalFOV = 60.f;
 		camera.m_aspectRatio = (f32)width / (f32)height;
 		camera.m_homogenousDepth = bgfx::getCaps()->homogeneousDepth;
 
