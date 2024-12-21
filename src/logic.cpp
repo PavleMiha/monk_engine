@@ -17,6 +17,7 @@
 #include <cstdio>
 
 extern bx::SpScUnboundedQueue s_keyEvents;
+extern bx::SpScUnboundedQueue s_systemEventsLogic;
 
 struct UpdateData {
 	f64 delta;
@@ -109,6 +110,11 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 	gameState[currentGameStateIndex].windowSize.y = args->height;
 
 	while (!exit) {
+		while (auto ev = (EventType*)s_systemEventsLogic.pop()) {
+			if (*ev == EventType::Exit) {
+				exit = true;
+			}
+		}
 		i64 frameCounter = bx::getHPCounter();
 		updateData.delta = (f64)(frameCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
 		gameState->frameTimes[gameState->frameTimeIndex] = updateData.delta;
@@ -144,12 +150,10 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 					updateData.keysDown[keyEvent->key] = false;
 				}
 			}
-		}
 
-		
+		}
 			
 		logicUpdate(currentGameState, prevGameState, updateData);
-
 
 		u32 currentRenderStateIndex = 0;
 		bool found = false;
@@ -180,7 +184,7 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 		currentRenderState.isBusy.store(false);
 
 		i64 ticksPerUpdate =
-			bx::getHPFrequency() * ((f64)1.0 / (f64)240.0);
+			bx::getHPFrequency() * ((f64)1.0 / (f64)120.0);
 		
 		i64 ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		while (ticksLeft > 1) {

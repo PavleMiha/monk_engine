@@ -13,9 +13,11 @@
 #include "bx/timer.h"
 #include "resources.h"
 #include "imgui/imgui.h"
+#include <bgfx/platform.h>
+
 
 #define RENDER_TIMES_BUFFER_SIZE 30
-extern bx::SpScUnboundedQueue s_systemEvents;
+extern bx::SpScUnboundedQueue s_systemEventsRender;
 extern std::atomic<f64> g_averageMainFrameTime;
 f32 frameTimes[RENDER_TIMES_BUFFER_SIZE];
 i32 frameTimesIndex = 0;
@@ -57,6 +59,8 @@ void showStatWindow() {
 
 i32 runRenderThread(bx::Thread *self, void *userData)
 {
+	bgfx::renderFrame();
+
 	auto args = (RenderThreadArgs *)userData;
 	// Initialize bgfx using the native window handle and window resolution.
 	bgfx::Init init;
@@ -80,7 +84,7 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 	bool exit = false;
 	while (!exit) {
 		// Handle events from the main thread.
-		while (auto ev = (EventType *)s_systemEvents.pop()) {
+		while (auto ev = (EventType *)s_systemEventsRender.pop()) {
 			
 			if (*ev == EventType::Resize) {
 				auto resizeEvent = (ResizeEvent *)ev;
@@ -88,6 +92,9 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 				bgfx::setViewRect(kClearView, 0, 0, bgfx::BackbufferRatio::Equal);
 				width = resizeEvent->width;
 				height = resizeEvent->height;
+			}
+			if (*ev == EventType::Exit) {
+				exit = true;
 			}
 			delete ev;
 		}
@@ -132,7 +139,7 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		);
 
 		ImGui::Begin("Stats");
-		ImGui::Text("Logic thread: %.1lf, %.1lf", renderState.logicThreadDeltaAverage, 1.0 / renderState.logicThreadDeltaAverage);
+		ImGui::Text("Logic thread: %.1lf, %.1lf", renderState.logicThreadDeltaAverage*1000.0, 1.0 / renderState.logicThreadDeltaAverage);
 
 		f64 averageTime = 0.0f;
 		for (int i = 0; i < RENDER_TIMES_BUFFER_SIZE; i++) {
@@ -140,10 +147,10 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		}
 		averageTime /= (f64)RENDER_TIMES_BUFFER_SIZE;
 
-		ImGui::Text("Render thread: %.1lf, %.1lf", averageTime, 1.0 / averageTime);
+		ImGui::Text("Render thread: %.1lf, %.1lf", averageTime*1000.0, 1.0 / averageTime);
 
 		f64 mainThreadTime = g_averageMainFrameTime.load();
-		ImGui::Text("Main thread: %.1lf, %.1lf", mainThreadTime, 1.0 / mainThreadTime);
+		ImGui::Text("Main thread: %.1lf, %.1lf", mainThreadTime*1000.0, 1.0 / mainThreadTime);
 
 		ImGui::End();
 		imguiEndFrame();
@@ -158,7 +165,6 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 		mat4 proj;
 		camera.getProjMat(&proj);
-
 
 		bgfx::setViewTransform(0, &view[0], &proj[0]);
 		bgfx::setViewRect(0, 0, 0, uint16_t(width), uint16_t(height));
@@ -203,6 +209,10 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 
 		g_renderState[renderStateIndex].isBusy.store(false);
 		bgfx::frame();
+
+		// Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
+		//bgfx::renderFrame();
+
 	}
 	bgfx::shutdown();
 	return 0;

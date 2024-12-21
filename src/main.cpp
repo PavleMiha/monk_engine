@@ -9,6 +9,7 @@
 #include <bx/spscqueue.h>
 #include <bx/thread.h>
 #include <bx/timer.h>
+#include <bx/os.h>
 #include <bgfx/bgfx.h>
 #include <bgfx/platform.h>
 #include <imgui/imgui.h>
@@ -41,7 +42,8 @@ bx::AllocatorI* getDefaultAllocator()
 	BX_PRAGMA_DIAGNOSTIC_POP();
 }
 
-bx::SpScUnboundedQueue s_systemEvents(getDefaultAllocator());
+bx::SpScUnboundedQueue s_systemEventsRender(getDefaultAllocator());
+bx::SpScUnboundedQueue s_systemEventsLogic(getDefaultAllocator());
 bx::SpScUnboundedQueue s_keyEvents(getDefaultAllocator());
 
 RenderState g_renderState[NUM_RENDER_STATES];
@@ -93,7 +95,6 @@ int main(int argc, char **argv)
 
 	// Call bgfx::renderFrame before bgfx::init to signal to bgfx not to create a render thread.
 	// Most graphics APIs must be used on the same thread that created the window.
-	bgfx::renderFrame();
 	// Create a thread to call the bgfx API from (except bgfx::renderFrame).
 	RenderThreadArgs apiThreadArgs;
 #if BX_PLATFORM_LINUX || BX_PLATFORM_BSD
@@ -126,7 +127,8 @@ int main(int argc, char **argv)
 		glfwPollEvents();
 		// Send window close event to the API thread.
 		if (glfwWindowShouldClose(window)) {
-			s_systemEvents.push(new ExitEvent);
+			s_systemEventsRender.push(new ExitEvent);
+			s_systemEventsLogic.push(new ExitEvent);
 			exit = true;
 		}
 		// Send window resize event to the API thread.
@@ -136,11 +138,11 @@ int main(int argc, char **argv)
 			auto resize = new ResizeEvent;
 			resize->width = (uint32_t)width;
 			resize->height = (uint32_t)height;
-			s_systemEvents.push(resize);
+			s_systemEventsRender.push(resize);
 		}
 
 		// Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.
-		bgfx::renderFrame();
+		//bgfx::renderFrame();
 
 		i64 currentCounter = bx::getHPCounter();
 		f64 frameTime = (f64)(bx::getHPCounter() - lastFrameCounter) / (f64)bx::getHPFrequency();
@@ -154,10 +156,20 @@ int main(int argc, char **argv)
 		}
 		averageFrameTime /= FRAME_TIMES_BUFFER_SIZE;
 		g_averageMainFrameTime.store(averageFrameTime);
+
+		i64 ticksPerUpdate =
+			bx::getHPFrequency() * ((f64)1.0 / (f64)480.0);
+
+		i64 ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
+		while (ticksLeft > 0) {
+			bx::yield();
+			ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
+		}
+
 	}
 
 	// Wait for the API thread to finish before shutting down.
-	while (bgfx::RenderFrame::NoContext != bgfx::renderFrame()) {}
+	//while (bgfx::RenderFrame::NoContext != bgfx::renderFrame()) {}
 	apiThread.shutdown();
 	logicThread.shutdown();
 	glfwTerminate();

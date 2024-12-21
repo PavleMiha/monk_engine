@@ -6,6 +6,7 @@
 
 #include <bx/file.h>
 #include <bx/allocator.h>
+#include <assimp/Importer.hpp>
 
 #include "vertex.h"
 
