@@ -189,126 +189,6 @@ solution "app"
 			"IMGUI_DISABLE_DEFAULT_ALLOCATORS"
 		}
 
-
-
-	project "assimp"
-		kind "StaticLib"
-		language "C++"
-
-		--targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-		--objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
-
-		defines {
-			-- "SWIG",
-			"ASSIMP_BUILD_NO_OWN_ZLIB",
-
-			"ASSIMP_BUILD_NO_X_IMPORTER",
-			"ASSIMP_BUILD_NO_3DS_IMPORTER",
-			"ASSIMP_BUILD_NO_MD3_IMPORTER",
-			"ASSIMP_BUILD_NO_MDL_IMPORTER",
-			"ASSIMP_BUILD_NO_MD2_IMPORTER",
-			-- "ASSIMP_BUILD_NO_PLY_IMPORTER",
-			"ASSIMP_BUILD_NO_ASE_IMPORTER",
-			-- "ASSIMP_BUILD_NO_OBJ_IMPORTER",
-			"ASSIMP_BUILD_NO_AMF_IMPORTER",
-			"ASSIMP_BUILD_NO_HMP_IMPORTER",
-			"ASSIMP_BUILD_NO_SMD_IMPORTER",
-			"ASSIMP_BUILD_NO_MDC_IMPORTER",
-			"ASSIMP_BUILD_NO_MD5_IMPORTER",
-			"ASSIMP_BUILD_NO_STL_IMPORTER",
-			"ASSIMP_BUILD_NO_LWO_IMPORTER",
-			"ASSIMP_BUILD_NO_DXF_IMPORTER",
-			"ASSIMP_BUILD_NO_NFF_IMPORTER",
-			"ASSIMP_BUILD_NO_RAW_IMPORTER",
-			"ASSIMP_BUILD_NO_OFF_IMPORTER",
-			"ASSIMP_BUILD_NO_AC_IMPORTER",
-			"ASSIMP_BUILD_NO_BVH_IMPORTER",
-			"ASSIMP_BUILD_NO_IRRMESH_IMPORTER",
-			"ASSIMP_BUILD_NO_IRR_IMPORTER",
-			"ASSIMP_BUILD_NO_Q3D_IMPORTER",
-			"ASSIMP_BUILD_NO_B3D_IMPORTER",
-			-- "ASSIMP_BUILD_NO_COLLADA_IMPORTER",
-			"ASSIMP_BUILD_NO_TERRAGEN_IMPORTER",
-			"ASSIMP_BUILD_NO_CSM_IMPORTER",
-			"ASSIMP_BUILD_NO_3D_IMPORTER",
-			"ASSIMP_BUILD_NO_LWS_IMPORTER",
-			"ASSIMP_BUILD_NO_OGRE_IMPORTER",
-			"ASSIMP_BUILD_NO_OPENGEX_IMPORTER",
-			"ASSIMP_BUILD_NO_MS3D_IMPORTER",
-			"ASSIMP_BUILD_NO_COB_IMPORTER",
-			"ASSIMP_BUILD_NO_BLEND_IMPORTER",
-			"ASSIMP_BUILD_NO_Q3BSP_IMPORTER",
-			"ASSIMP_BUILD_NO_NDO_IMPORTER",
-			"ASSIMP_BUILD_NO_IFC_IMPORTER",
-			"ASSIMP_BUILD_NO_XGL_IMPORTER",
-			"ASSIMP_BUILD_NO_FBX_IMPORTER",
-			"ASSIMP_BUILD_NO_ASSBIN_IMPORTER",
-			-- "ASSIMP_BUILD_NO_GLTF_IMPORTER",
-			"ASSIMP_BUILD_NO_C4D_IMPORTER",
-			"ASSIMP_BUILD_NO_3MF_IMPORTER",
-			"ASSIMP_BUILD_NO_X3D_IMPORTER",
-			"ASSIMP_BUILD_NO_MMD_IMPORTER",
-			
-			"ASSIMP_BUILD_NO_STEP_EXPORTER",
-			"ASSIMP_BUILD_NO_SIB_IMPORTER",
-
-			-- "ASSIMP_BUILD_NO_MAKELEFTHANDED_PROCESS",
-			-- "ASSIMP_BUILD_NO_FLIPUVS_PROCESS",
-			-- "ASSIMP_BUILD_NO_FLIPWINDINGORDER_PROCESS",
-			-- "ASSIMP_BUILD_NO_CALCTANGENTS_PROCESS",
-			"ASSIMP_BUILD_NO_JOINVERTICES_PROCESS",
-			-- "ASSIMP_BUILD_NO_TRIANGULATE_PROCESS",
-			"ASSIMP_BUILD_NO_GENFACENORMALS_PROCESS",
-			-- "ASSIMP_BUILD_NO_GENVERTEXNORMALS_PROCESS",
-			"ASSIMP_BUILD_NO_REMOVEVC_PROCESS",
-			"ASSIMP_BUILD_NO_SPLITLARGEMESHES_PROCESS",
-			"ASSIMP_BUILD_NO_PRETRANSFORMVERTICES_PROCESS",
-			"ASSIMP_BUILD_NO_LIMITBONEWEIGHTS_PROCESS",
-			-- "ASSIMP_BUILD_NO_VALIDATEDS_PROCESS",
-			"ASSIMP_BUILD_NO_IMPROVECACHELOCALITY_PROCESS",
-			"ASSIMP_BUILD_NO_FIXINFACINGNORMALS_PROCESS",
-			"ASSIMP_BUILD_NO_REMOVE_REDUNDANTMATERIALS_PROCESS",
-			"ASSIMP_BUILD_NO_FINDINVALIDDATA_PROCESS",
-			"ASSIMP_BUILD_NO_FINDDEGENERATES_PROCESS",
-			"ASSIMP_BUILD_NO_SORTBYPTYPE_PROCESS",
-			"ASSIMP_BUILD_NO_GENUVCOORDS_PROCESS",
-			"ASSIMP_BUILD_NO_TRANSFORMTEXCOORDS_PROCESS",
-			"ASSIMP_BUILD_NO_FINDINSTANCES_PROCESS",
-			"ASSIMP_BUILD_NO_OPTIMIZEMESHES_PROCESS",
-			"ASSIMP_BUILD_NO_OPTIMIZEGRAPH_PROCESS",
-			"ASSIMP_BUILD_NO_SPLITBYBONECOUNT_PROCESS",
-			"ASSIMP_BUILD_NO_DEBONE_PROCESS",
-			"ASSIMP_BUILD_NO_EMBEDTEXTURES_PROCESS",
-			"ASSIMP_BUILD_NO_GLOBALSCALE_PROCESS",
-		}
-
-		files {
-		  	path.join(ASSIMP_DIR, "include/**"),
-		  	path.join(ASSIMP_DIR, "code/**"),
-		}
-
-		includedirs {
-			path.join(ASSIMP_DIR, "code"),
-			path.join(ASSIMP_DIR, "include"),
-			path.join(ASSIMP_DIR, "contrib/irrXML"),
-			path.join(ASSIMP_DIR, "contrib/zlib"),
-			path.join(ASSIMP_DIR, "contrib/rapidjson/include"),
-		}
-
-
-		configuration "windows"
-			--systemversion "latest"
-
-		configuration "Debug"
-			flags {"DebugRuntime", "Symbols"}
-
-		configuration "Release"
-			flags {"ReleaseRuntime", "Optimize"}
-
-		configuration {}
-			flags {"Cpp17",
-			"StaticRuntime"}
-
 	startproject "app"
 	
 	project "app"
@@ -319,8 +199,9 @@ solution "app"
 							"./src/**.cpp",
 							"./src/**.h",
 							"./src/**.hpp",
+							"./assets/**.sc"
 		}
-		
+
 		includedirs {
 							"./src/",
 							path.join(GLFW_DIR, "include"),
@@ -345,25 +226,36 @@ solution "app"
 							"bx",
 							"imgui",
 							"entry",
-							"assimp",
+							"assimp-vc143-mtd",
+							"zlibstaticd",
 							"shaderc"
 		}
 	
 		configuration		"Debug"
 			targetsuffix	"_d"
 			flags			{ "Symbols" }
+			libdirs			{
+				path.join(PROJECT_DIR, "lib/debug")
+			}
 			
 		configuration		"Release"
 			targetsuffix	"_r"
 			flags			{ "Optimize" }
+			libdirs			{
+				path.join(PROJECT_DIR, "lib/release")
+			}
 
 		configuration {}
 		debugdir			(PROJECT_RUNTIME_DIR)
 		targetdir			(PROJECT_RUNTIME_DIR)
 
+		configuration "**.objm"
+		    buildaction "Copy"
+
 		matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.sc"))
 
 		for i,file in pairs(matches) do
+			--print(i, file)
 			if not string.find(file, "def.") then
 				local shader_type = "vertex"
 				if string.find(file, "fs_") then shader_type = "fragment" end
@@ -374,39 +266,52 @@ solution "app"
 					 "call " .. path.join(PROJECT_DIR, "scripts/build_shader_win.bat") .. " $(<) " .. shader_type}}
 -- see https://stackoverflow.com/questions/3686837/why-are-my-custom-build-steps-not-running-in-visual-studio for why we need "call"
 				}
+
+				--print(file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin")
 			end
     	end
 
+    	--[[matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.obj"))
+		for i,file in pairs(matches) do
+					if not string.find(file, "def.") then
+						custombuildtask {
+							{ file, PROJECT_BUILD_DIR .. file, { },
+							{os.copyfile(file, PROJECT_BUILD_DIR .. file)}}
+		-- see https://stackoverflow.com/questions/3686837/why-are-my-custom-build-steps-not-running-in-visual-studio for why we need "call"
+				}
+			end
+    	end]]
+
 		configuration { "vs*" }
-		buildoptions
-		{
-			"/wd 4127", -- Disable 'Conditional expression is constant' for do {} while(0).
-			"/wd 4201", -- Disable 'Nonstandard extension used: nameless struct/union'. Used for uniforms in the project.
-			"/wd 4345", -- Disable 'An object of POD type constructed with an initializer of the form () will be default-initialized'. It's an obsolete warning.
-		}
-		linkoptions
-		{
-			"/ignore:4199", -- LNK4199: /DELAYLOAD:*.dll ignored; no imports found from *.dll
-		}
-		links
-		{ -- this is needed only for testing with GLES2/3 on Windows with VS2008
-			"DelayImp",
-		}
+			buildoptions
+			{
+				"/wd 4127", -- Disable 'Conditional expression is constant' for do {} while(0).
+				"/wd 4201", -- Disable 'Nonstandard extension used: nameless struct/union'. Used for uniforms in the project.
+				"/wd 4345", -- Disable 'An object of POD type constructed with an initializer of the form () will be default-initialized'. It's an obsolete warning.
+			}
+			linkoptions
+			{
+				"/ignore:4199", -- LNK4199: /DELAYLOAD:*.dll ignored; no imports found from *.dll
+			}
+			links
+			{ -- this is needed only for testing with GLES2/3 on Windows with VS2008
+				"DelayImp",
+			}
 
-	configuration "windows"
-		links
-		{
-			"psapi",
-		}
+		configuration "windows"
+			links
+			{
+				"psapi",
+			}
 
-	configuration { "vs2010" }
-		linkoptions
-		{ -- this is needed only for testing with GLES2/3 on Windows with VS201x
-			"/DELAYLOAD:\"libEGL.dll\"",
-			"/DELAYLOAD:\"libGLESv2.dll\"",
-		}
+		configuration { "vs2010" }
+			linkoptions
+			{ -- this is needed only for testing with GLES2/3 on Windows with VS201x
+				"/DELAYLOAD:\"libEGL.dll\"",
+				"/DELAYLOAD:\"libGLESv2.dll\"",
+			}
 
-	configuration {}
+		configuration {}
 
 	group "tools"
 	dofile (path.join(BGFX_DIR, "scripts/shaderc.lua"))

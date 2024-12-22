@@ -23,3 +23,20 @@ struct PosColorVertex
 
     static bgfx::VertexLayout s_layout;
 };
+
+// A simple structure to store vertex data
+struct PosNormalTexVertex {
+    float m_position[3];
+    float m_normal[3];
+    float m_texCoords[2];
+
+    static void init() {
+        s_layout.begin().
+            add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).
+            add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float).
+            add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).
+            end();
+    }
+
+    static bgfx::VertexLayout s_layout;
+};
