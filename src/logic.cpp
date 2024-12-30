@@ -43,10 +43,10 @@ void logicUpdate(GameState& nextGameState, const GameState& prevGameState, const
 		forwardAcceleration = -1.0f;
 	}
 	if (updateData.keysDown[GLFW_KEY_D]) {
-		rightAcceleration	= 1.0f;
+		rightAcceleration	= -1.0f;
 	}
 	if (updateData.keysDown[GLFW_KEY_A]) {
-		rightAcceleration	= -1.0f;
+		rightAcceleration	= 1.0f;
 	}
 	if (updateData.keysDown[GLFW_KEY_E]) {
 		upAcceleration		= 1.0f;
@@ -69,11 +69,11 @@ void logicUpdate(GameState& nextGameState, const GameState& prevGameState, const
 	nextGameState.camera.m_pos = prevGameState.playerVelocity * (f32)updateData.delta + prevGameState.camera.m_pos;
 
 	if (updateData.keysDown[GLFW_KEY_RIGHT]) {
-		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw - updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw + updateData.delta * prevGameState.angularSpeed;
 	}
 
 	if (updateData.keysDown[GLFW_KEY_LEFT]) {
-		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw + updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw - updateData.delta * prevGameState.angularSpeed;
 	}
 
 	if (updateData.keysDown[GLFW_KEY_UP]) {

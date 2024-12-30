@@ -10,6 +10,11 @@
 #include "bx/file.h"
 #include "bx/bounds.h"
 
+#include "vertex.h"
+
+#include <string>
+#include <vector>
+
 struct Group
 {
 	Group();
@@ -30,10 +35,14 @@ struct Group
 
 struct Mesh
 {
-	void load(bx::ReaderSeekerI* _reader, bool _ramcopy);
+	void load(const std::string& filepath);
+	void submit(bgfx::ViewId _id, bgfx::ProgramHandle _program, const float* _mtx, uint64_t _state = BGFX_STATE_MASK) const;
 
+	std::vector<PosNormalTexVertex> vertices;
+	std::vector<u16> indices;
+
+	std::vector<Group> m_groups;
 	bgfx::VertexLayout m_layout;
-
 };
 
 

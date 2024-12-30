@@ -5,11 +5,15 @@
 #pragma once
 
 #include <bgfx/bgfx.h>
+#include "mesh.h"
 #include "vertex.h"
 
 struct Resources
 {
 	bgfx::ProgramHandle vertexColorProgram;
+	bgfx::ProgramHandle meshProgram;
+	
+	Mesh teapot;
 
 	const PosColorVertex cubeVertices[8] =
 	{

@@ -70,6 +70,7 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 	init.resolution.reset = BGFX_RESET_VSYNC;
 	if (!bgfx::init(init))
 		return 1;
+	bgfx::setDebug(BGFX_DEBUG_TEXT);
 
 	loadResources();
 
@@ -173,6 +174,12 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		drawCube(0.0f, 5.0f, 0.0f);
 		drawCube(5.0f, 0.0f, 0.0f);
 		drawCube(0.0f, 0.0f, 5.0f);
+
+
+		float mtx[16];
+		bx::mtxTranslate(mtx, 5.0f, 5.0f, 5.0f);
+
+		g_resources.teapot.submit(0, g_resources.meshProgram, mtx);
 
 		// Create view matrix
 		/*mat4 glmview = createViewMatrix(renderState.cameraYaw, renderState.cameraPitch, renderState.cameraPos);

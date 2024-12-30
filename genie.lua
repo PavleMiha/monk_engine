@@ -140,7 +140,7 @@ solution "app"
 		files {
 			path.join(BGFX_DIR, "examples/common/entry/*.h"),
 			path.join(BGFX_DIR, "examples/common/entry/*.cpp"),
-			path.join(BGFX_DIR, "examples/common/bgfx_utils.cpp"),
+			--path.join(BGFX_DIR, "examples/common/bgfx_utils.cpp"),
 			path.join(BGFX_DIR, "3rdparty/meshoptimizer/src/*.cpp"),
 			path.join(BGFX_DIR, "3rdparty/meshoptimizer/src/*.h"),
 		}
@@ -199,7 +199,7 @@ solution "app"
 							"./src/**.cpp",
 							"./src/**.h",
 							"./src/**.hpp",
-							"./assets/**.sc"
+							--"./assets/**.obj"
 		}
 
 		includedirs {
@@ -249,9 +249,6 @@ solution "app"
 		debugdir			(PROJECT_RUNTIME_DIR)
 		targetdir			(PROJECT_RUNTIME_DIR)
 
-		configuration "**.objm"
-		    buildaction "Copy"
-
 		matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.sc"))
 
 		for i,file in pairs(matches) do
@@ -269,6 +266,23 @@ solution "app"
 
 				--print(file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin")
 			end
+    	end
+
+    	matchesobj = os.matchfiles(path.join(PROJECT_DIR, "assets/**.abj"))
+
+		for i,file in pairs(matchesobj) do
+			--print(i, file)
+			input = file
+			output = path.join(PROJECT_BUILD_DIR .. "/bin/", path.getname(file))
+			input_converted = string.gsub(input, "/", "\\")
+			output_converted = string.gsub(output, "/", "\\")
+			custombuildtask {
+				{ file, path.join(PROJECT_BUILD_DIR .. "/bin/", path.getname(file)), { },
+				{"copy " .. input_converted .. " " .. output_converted}}
+-- see https://stackoverflow.com/questions/3686837/why-are-my-custom-build-steps-not-running-in-visual-studio for why we need "call"
+			}
+
+				--print(file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin")
     	end
 
     	--[[matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.obj"))

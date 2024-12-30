@@ -38,15 +38,18 @@ void Camera::getViewMat(mat4* out) const {
 
 	vec3 at = m_pos + forward;
 
-	*out = (glm::lookAt(m_pos, at, up));
+	//change this for Left hand
+	*out = (glm::lookAtLH(m_pos, at, up));
 	//bx::mtxLookAt(out->data, m_pos, at, up);
 }
 
 void Camera::getProjMat(mat4* out) const {
+	
+	//change this for Left hand
 	if (m_homogenousDepth)
-		*out = (glm::perspectiveNO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//-1 to 1
+		*out = (glm::perspectiveLH_NO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//-1 to 1
 	else
-		*out = (glm::perspectiveZO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//0 to 1
+		*out = (glm::perspectiveLH_ZO(glm::radians(m_verticalFOV), m_aspectRatio, m_near, m_far));//0 to 1
 
 	//bx::mtxProj(out->data, m_horizontalFOV, m_aspectRatio, m_near, m_far, m_homogenousDepth);
 }

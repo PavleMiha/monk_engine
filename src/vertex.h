@@ -13,11 +13,13 @@ struct PosColorVertex
     f32 m_y;
     f32 m_z;
     u32 m_abgr;
+    float m_normal[3];
 
     static void init() {
         s_layout.begin().
             add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).
-            add(bgfx::Attrib::Color0,    4, bgfx::AttribType::Uint8, true).
+            add(bgfx::Attrib::Color0,   4, bgfx::AttribType::Uint8, true).
+            add(bgfx::Attrib::Normal,   3, bgfx::AttribType::Float).
             end();
     }
 
@@ -31,12 +33,12 @@ struct PosNormalTexVertex {
     float m_texCoords[2];
 
     static void init() {
-        s_layout.begin().
+        ms_layout.begin().
             add(bgfx::Attrib::Position, 3, bgfx::AttribType::Float).
             add(bgfx::Attrib::Normal, 3, bgfx::AttribType::Float).
             add(bgfx::Attrib::TexCoord0, 2, bgfx::AttribType::Float).
             end();
     }
 
-    static bgfx::VertexLayout s_layout;
+    static bgfx::VertexLayout ms_layout;
 };
