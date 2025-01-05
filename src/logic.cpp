@@ -20,7 +20,7 @@ extern bx::SpScUnboundedQueue s_keyEvents;
 extern bx::SpScUnboundedQueue s_systemEventsLogic;
 
 struct UpdateData {
-	f64 delta;
+	f32 delta;
 	vec2 mousePos;
 	i32 width;
 	i32 height;
@@ -61,39 +61,39 @@ void logicUpdate(GameState& nextGameState, const GameState& prevGameState, const
 
 	if (glm::length(accelDirection) > 0.0001) {
 		printf("Higher\n");
-		nextGameState.playerVelocity += glm::normalize(accelDirection) * (f32)updateData.delta * prevGameState.playerAcceleration;
+		nextGameState.player_velocity += glm::normalize(accelDirection) * updateData.delta * prevGameState.player_acceleration;
 	}
 
-	nextGameState.playerVelocity = nextGameState.playerVelocity * (f32)glm::pow(0.002, updateData.delta);
+	nextGameState.player_velocity = nextGameState.player_velocity * glm::pow(0.002f, updateData.delta);
 
-	nextGameState.camera.m_pos = prevGameState.playerVelocity * (f32)updateData.delta + prevGameState.camera.m_pos;
+	nextGameState.camera.pos = prevGameState.player_velocity * updateData.delta + prevGameState.camera.pos;
 
 	if (updateData.keysDown[GLFW_KEY_RIGHT]) {
-		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw + updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.yaw = prevGameState.camera.yaw + updateData.delta * prevGameState.angular_speed;
 	}
 
 	if (updateData.keysDown[GLFW_KEY_LEFT]) {
-		nextGameState.camera.m_yaw = prevGameState.camera.m_yaw - updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.yaw = prevGameState.camera.yaw - updateData.delta * prevGameState.angular_speed;
 	}
 
 	if (updateData.keysDown[GLFW_KEY_UP]) {
-		nextGameState.camera.m_pitch = prevGameState.camera.m_pitch + updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.pitch = prevGameState.camera.pitch + updateData.delta * prevGameState.angular_speed;
 	}
 
 	if (updateData.keysDown[GLFW_KEY_DOWN]) {
-		nextGameState.camera.m_pitch = prevGameState.camera.m_pitch - updateData.delta * prevGameState.angularSpeed;
+		nextGameState.camera.pitch = prevGameState.camera.pitch - updateData.delta * prevGameState.angular_speed;
 	}
 }
 
-void generateRenderState(RenderState& renderState, const GameState& gameState) {
+/*void generateRenderState(RenderState& render_state, const GameState& gameState) {
 	f64 logicStateAverage = 0.0;
 	for (int i = 0; i < FRAME_TIMES_BUFFER_SIZE; i++) {
-		logicStateAverage += gameState.frameTimes[i];
+		logicStateAverage += gameState.frame_times[i];
 	}
 	logicStateAverage /= (f64)FRAME_TIMES_BUFFER_SIZE;
-	renderState.logicThreadDeltaAverage = logicStateAverage;
-	memcpy(&renderState.camera, &gameState.camera, sizeof(Camera));
-}
+	render_state.logicThreadDeltaAverage = logicStateAverage;
+	memcpy(&render_state.camera, &gameState.camera, sizeof(Camera));
+}*/
 
 i32 runLogicThread(bx::Thread* self, void* userData) {
 	auto args = (RenderThreadArgs*)userData;
@@ -103,11 +103,12 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 	bool exit = false;
 	UpdateData updateData = {};
 
-	GameState gameState[2];
 	u32		  currentGameStateIndex = 0;
 
-	gameState[currentGameStateIndex].windowSize.x = args->width;
-	gameState[currentGameStateIndex].windowSize.y = args->height;
+	g_gameStates[currentGameStateIndex].window_size.x = args->width;
+	g_gameStates[currentGameStateIndex].window_size.y = args->height;
+
+	i32 previousGameStateIndex = currentGameStateIndex;
 
 	while (!exit) {
 		while (auto ev = (EventType*)s_systemEventsLogic.pop()) {
@@ -115,28 +116,56 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 				exit = true;
 			}
 		}
+
+		//find oldest game not being written to
+		bool found = false;
+
+		while (!found) {
+			i64 oldestTime = -1;
+
+			for (i32 i = 0; i < NUM_GAME_STATES; i++) {
+				if (i != previousGameStateIndex && i != g_beingRendered.load()) {
+					if (g_gameStates[i].timeGenerated > oldestTime) {
+						currentGameStateIndex = i;
+						oldestTime = g_gameStates[i].timeGenerated;
+					}
+				}
+			}
+
+			bool expected = false;
+
+			g_beingUpdated.store(currentGameStateIndex);
+
+			found = true;
+		}
+
+		const GameState& prevGameState = g_gameStates[previousGameStateIndex];
+		GameState& currentGameState = g_gameStates[currentGameStateIndex];
+
+		memcpy(&currentGameState, &prevGameState, sizeof(GameState));
+
 		i64 frameCounter = bx::getHPCounter();
-		updateData.delta = (f64)(frameCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
-		gameState->frameTimes[gameState->frameTimeIndex] = updateData.delta;
-		gameState->frameTimeIndex = (gameState->frameTimeIndex + 1) % FRAME_TIMES_BUFFER_SIZE;
+		updateData.delta = (f32)(frameCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
+		currentGameState.frame_times[currentGameState.frame_time_index] = updateData.delta;
+		currentGameState.frame_time_index = (currentGameState.frame_time_index + 1) % FRAME_TIMES_BUFFER_SIZE;
 		lastFrameCounter = frameCounter;
+
+		f64 logicStateAverage = 0.0;
+		for (int i = 0; i < FRAME_TIMES_BUFFER_SIZE; i++) {
+			logicStateAverage += currentGameState.frame_times[i];
+		}
+		logicStateAverage /= (f64)FRAME_TIMES_BUFFER_SIZE;
+		currentGameState.logicThreadDeltaAverage = logicStateAverage;
 
 		memset((void*)updateData.keysPressedThisFrame, 0, sizeof(updateData.keysPressedThisFrame));
 		memset((void*)updateData.keysReleasedThisFrame, 0, sizeof(updateData.keysReleasedThisFrame));
 
-		u32 prevGameStateIndex = currentGameStateIndex;
-		currentGameStateIndex = (currentGameStateIndex + 1) % 2;
-
-		const GameState& prevGameState = gameState[currentGameStateIndex];
-		GameState& currentGameState = gameState[currentGameStateIndex];
-
-		memcpy(&gameState[currentGameStateIndex], &gameState[prevGameStateIndex], sizeof(GameState));
 
 		while (auto ev = (EventType*)s_keyEvents.pop()) {
 			if (*ev == EventType::Resize) {
 				auto resizeEvent = (ResizeEvent*)ev;
-				gameState->windowSize.x = resizeEvent->width;
-				gameState->windowSize.y = resizeEvent->height;
+				currentGameState.window_size.x = resizeEvent->width;
+				currentGameState.window_size.y = resizeEvent->height;
 			}
 			if (*ev == EventType::Key) {
 				auto keyEvent = (KeyEvent*)ev;
@@ -150,47 +179,21 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 					updateData.keysDown[keyEvent->key] = false;
 				}
 			}
-
 		}
 			
 		logicUpdate(currentGameState, prevGameState, updateData);
-
-		u32 currentRenderStateIndex = 0;
-		bool found = false;
-		while (!found) {
-			i64 oldestTime = INT64_MAX;
-
-			for (i32 i = 0; i < NUM_RENDER_STATES; i++) {
-				if (!g_renderState[i].isBusy.load()) {
-					if (g_renderState[i].timeGenerated < oldestTime) {
-						currentRenderStateIndex = i;
-						oldestTime = g_renderState[i].timeGenerated;
-					}
-				}
-			}
-
-			bool expected = false;
-			if (g_renderState[currentRenderStateIndex].isBusy.compare_exchange_weak(expected, true)) {
-				found = true;
-			}
-		}
-
-		RenderState& currentRenderState = g_renderState[currentRenderStateIndex];
-
-		currentRenderState.timeGenerated = frameCounter;
-
-		generateRenderState(currentRenderState, currentGameState);
-
-		currentRenderState.isBusy.store(false);
+		g_beingUpdated.store(-1);
 
 		i64 ticksPerUpdate =
-			bx::getHPFrequency() * ((f64)1.0 / (f64)120.0);
+			bx::getHPFrequency() * ((f64)1.0 / (f64)60.0);
 		
 		i64 ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		while (ticksLeft > 1) {
 			bx::yield();
 			ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		}
+
+		previousGameStateIndex = currentGameStateIndex;
 	}
 	return 0;
 }

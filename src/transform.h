@@ -9,8 +9,8 @@
 
 struct Transform
 {
-	vec3 m_pos = { 0.0f, 0.0f, 0.0f };
-	f32  m_pitch = 0.0f;
-	f32  m_yaw = 0.0f;
-	f32  m_roll = 0.0f;
+	vec3 pos = { 0.0f, 0.0f, 0.0f };
+	f32  pitch = 0.0f;
+	f32  yaw = 0.0f;
+	f32  roll = 0.0f;
 };

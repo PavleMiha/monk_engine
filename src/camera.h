@@ -9,16 +9,16 @@
 
 struct Camera
 {
-	vec3 m_pos   = { 0.0f, 0.0f, -80.0f };
-	f32  m_pitch = 0.0f;
-	f32  m_yaw   = 0.0f;
-	f32  m_roll  = 0.0f;
+	vec3 pos   = { 0.0f, 0.0f, -80.0f };
+	f32  pitch = 0.0f;
+	f32  yaw   = 0.0f;
+	f32  roll  = 0.0f;
 
-	f32	 m_aspectRatio	   = 1.0f;
-	f32  m_verticalFOV     = 60.f;
-	bool m_homogenousDepth = true;
-	f32  m_near			   = 0.1f;
-	f32  m_far			   = 1000.0f;
+	f32	aspect_ratio	 = 1.0f;
+	f32 vertical_FOV     = 60.f;
+	f32 near_plane		 = 0.1f;
+	f32 far_plane		 = 1000.0f;
+	b8  homogenous_depth = true;
 
 	vec3 getForwardDirection() const;
 	vec3 getRightDirection()   const;

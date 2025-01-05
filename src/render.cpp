@@ -3,6 +3,7 @@
  */
 
 #include "render.h"
+#include "game_state.h"
 
 #include "input.h"
 #include "GLFW/glfw3.h"
@@ -19,7 +20,7 @@
 #define RENDER_TIMES_BUFFER_SIZE 30
 extern bx::SpScUnboundedQueue s_systemEventsRender;
 extern std::atomic<f64> g_averageMainFrameTime;
-f32 frameTimes[RENDER_TIMES_BUFFER_SIZE];
+f32 frame_times[RENDER_TIMES_BUFFER_SIZE];
 i32 frameTimesIndex = 0;
 i64 lastFrameCounter = 0;
 
@@ -31,8 +32,8 @@ void drawCube(float x, float y, float z) {
 
 	bgfx::setTransform(mtx);
 	// Set vertex and index buffer.
-	bgfx::setVertexBuffer(0, g_resources.m_vbh);
-	bgfx::setIndexBuffer(g_resources.m_ibh);
+	bgfx::setVertexBuffer(0, g_resources.cube_vbh);
+	bgfx::setIndexBuffer(g_resources.cube_ibh);
 
 	u64 state = BGFX_STATE_WRITE_R
 		| BGFX_STATE_WRITE_G
@@ -106,22 +107,20 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		while (!found) {
 			i64 newestTime = -1;
 
-			for (i32 i = 0; i < NUM_RENDER_STATES; i++) {
-				if (!g_renderState[i].isBusy.load()) {
-					if (g_renderState[i].timeGenerated > newestTime) {
+			for (i32 i = 0; i < NUM_GAME_STATES; i++) {
+				if (g_beingUpdated.load() != i) {
+					if (g_gameStates[i].timeGenerated > newestTime) {
 						renderStateIndex = i;
-						newestTime = g_renderState[i].timeGenerated;
+						newestTime = g_gameStates[i].timeGenerated;
 					}
 				}
 			}
-			
-			bool expected = false;
-			if (g_renderState[renderStateIndex].isBusy.compare_exchange_weak(expected, true)) {
-				found = true;
-			}
+
+			found = true;
+			g_beingRendered.store(renderStateIndex);
 		}
 
-		const RenderState& renderState = g_renderState[renderStateIndex];
+		const GameState& render_state = g_gameStates[renderStateIndex];
 
 		f64 cursorPos[2] = {};
 		glfwGetCursorPos(args->window, &cursorPos[0], &cursorPos[1]);
@@ -140,11 +139,11 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		);
 
 		ImGui::Begin("Stats");
-		ImGui::Text("Logic thread: %.1lf, %.1lf", renderState.logicThreadDeltaAverage*1000.0, 1.0 / renderState.logicThreadDeltaAverage);
+		ImGui::Text("Logic thread: %.1lf, %.1lf", render_state.logicThreadDeltaAverage*1000.0, 1.0 / render_state.logicThreadDeltaAverage);
 
 		f64 averageTime = 0.0f;
 		for (int i = 0; i < RENDER_TIMES_BUFFER_SIZE; i++) {
-			averageTime += frameTimes[i];
+			averageTime += frame_times[i];
 		}
 		averageTime /= (f64)RENDER_TIMES_BUFFER_SIZE;
 
@@ -156,10 +155,10 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		ImGui::End();
 		imguiEndFrame();
 
-		Camera camera = renderState.camera;
-		camera.m_verticalFOV = 60.f;
-		camera.m_aspectRatio = (f32)width / (f32)height;
-		camera.m_homogenousDepth = bgfx::getCaps()->homogeneousDepth;
+		Camera camera = render_state.camera;
+		camera.vertical_FOV = 60.f;
+		camera.aspect_ratio = (f32)width / (f32)height;
+		camera.homogenous_depth = bgfx::getCaps()->homogeneousDepth;
 
 		mat4 view;
 		camera.getViewMat(&view);
@@ -175,11 +174,13 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		drawCube(5.0f, 0.0f, 0.0f);
 		drawCube(0.0f, 0.0f, 5.0f);
 
-
 		float mtx[16];
 		bx::mtxTranslate(mtx, 5.0f, 5.0f, 5.0f);
 
 		g_resources.teapot.submit(0, g_resources.meshProgram, mtx);
+
+		bx::mtxTranslate(mtx, 0.0f, 0.0f, 0.0f);
+		//g_resources.sponza.submit(0, g_resources.meshProgram, mtx);
 
 		// Create view matrix
 		/*mat4 glmview = createViewMatrix(renderState.cameraYaw, renderState.cameraPitch, renderState.cameraPos);
@@ -210,11 +211,11 @@ i32 runRenderThread(bx::Thread *self, void *userData)
 		//bx::sleep(50);
 
 		i64 currentCounter = bx::getHPCounter();
-		frameTimes[frameTimesIndex] = (f64)(currentCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
+		frame_times[frameTimesIndex] = (f64)(currentCounter - lastFrameCounter)/(f64)bx::getHPFrequency();
 		frameTimesIndex = (frameTimesIndex + 1) % RENDER_TIMES_BUFFER_SIZE;
 		lastFrameCounter = currentCounter;
 
-		g_renderState[renderStateIndex].isBusy.store(false);
+		g_beingRendered.store(-1);
 		bgfx::frame();
 
 		// Wait for the API thread to call bgfx::frame, then process submitted rendering primitives.

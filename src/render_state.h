@@ -3,7 +3,7 @@
  */
 
 #pragma once
-
+/*
 #include "types.h"
 #include "monk_math.h"
 #include <atomic>
@@ -24,4 +24,4 @@ struct RenderState
 	bool			  showStats;
 };
 
-extern RenderState g_renderState[NUM_RENDER_STATES];
+extern RenderState g_renderState[NUM_RENDER_STATES];*/

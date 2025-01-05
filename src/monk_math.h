@@ -21,6 +21,7 @@ typedef glm::vec4	 vec4;
 typedef glm::vec3	 vec3;
 typedef glm::vec2	 vec2;
 typedef glm::i32vec2 vec2i;
+typedef glm::quat	 quat;
 
 const static vec3 s_forward(0.0f, 0.0f, 1.0f);
 const static vec3 s_right(1.0f, 0.0f, 0.0f);

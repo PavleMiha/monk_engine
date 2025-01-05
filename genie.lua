@@ -285,6 +285,23 @@ solution "app"
 				--print(file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin")
     	end
 
+    	matchesobj = os.matchfiles(path.join(PROJECT_DIR, "assets/**.fbx"))
+
+		for i,file in pairs(matchesobj) do
+			--print(i, file)
+			input = file
+			output = path.join(PROJECT_BUILD_DIR .. "/bin/", path.getname(file))
+			input_converted = string.gsub(input, "/", "\\")
+			output_converted = string.gsub(output, "/", "\\")
+			custombuildtask {
+				{ file, path.join(PROJECT_BUILD_DIR .. "/bin/", path.getname(file)), { },
+				{"copy " .. input_converted .. " " .. output_converted}}
+-- see https://stackoverflow.com/questions/3686837/why-are-my-custom-build-steps-not-running-in-visual-studio for why we need "call"
+			}
+
+				--print(file, PROJECT_BUILD_DIR .. "/bin/shaders/dx11/" .. path.getbasename(file) .. ".bin")
+    	end
+
     	--[[matches = os.matchfiles(path.join(PROJECT_DIR, "assets/**.obj"))
 		for i,file in pairs(matches) do
 					if not string.find(file, "def.") then

@@ -138,13 +138,14 @@ bool loadResources() {
 	g_resources.meshProgram = loadProgram(s_fileReader, "vs_mesh", "fs_mesh");
 
 	g_resources.teapot.load("teapot.abj");
+	//g_resources.sponza.load("NewSponza_Main_Yup_003.fbx");
 
-	g_resources.m_vbh = bgfx::createVertexBuffer(
+	g_resources.cube_vbh = bgfx::createVertexBuffer(
 		bgfx::makeRef(g_resources.cubeVertices, sizeof(g_resources.cubeVertices)),
 		PosColorVertex::s_layout
 	);
 
-	g_resources.m_ibh = bgfx::createIndexBuffer(
+	g_resources.cube_ibh = bgfx::createIndexBuffer(
 		// Static data can be passed with bgfx::makeRef
 		bgfx::makeRef(g_resources.cubeIndexList, sizeof(g_resources.cubeIndexList))
 	);

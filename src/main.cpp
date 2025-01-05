@@ -46,8 +46,10 @@ bx::SpScUnboundedQueue s_systemEventsRender(getDefaultAllocator());
 bx::SpScUnboundedQueue s_systemEventsLogic(getDefaultAllocator());
 bx::SpScUnboundedQueue s_keyEvents(getDefaultAllocator());
 
-RenderState g_renderState[NUM_RENDER_STATES];
 Resources g_resources;
+std::atomic<i32> g_beingRendered(0);
+std::atomic<i32> g_beingUpdated(0);
+GameState g_gameStates[NUM_GAME_STATES];
 
 #define MAIN_LOOP_TIME_BUFFER_SIZE 30
 f64				 g_frameTimes[MAIN_LOOP_TIME_BUFFER_SIZE];
@@ -78,7 +80,6 @@ static void glfw_mouseCallback(GLFWwindow* window, int button, int action, int m
 
 	s_keyEvents.push(mouseEvent);
 }
-
 
 int main(int argc, char **argv)
 {
@@ -117,11 +118,10 @@ int main(int argc, char **argv)
 	bx::Thread logicThread;
 	logicThread.init(runLogicThread, &apiThreadArgs);
 
-
 	// Run GLFW message pump.
 	bool exit = false;
 	i64 lastFrameCounter = bx::getHPCounter();
-	i32 frameTimeIndex = 0;
+	i32 frame_time_index = 0;
 
 	while (!exit) {
 		glfwPollEvents();
@@ -148,8 +148,8 @@ int main(int argc, char **argv)
 		f64 frameTime = (f64)(bx::getHPCounter() - lastFrameCounter) / (f64)bx::getHPFrequency();
 		lastFrameCounter = currentCounter;
 
-		g_frameTimes[frameTimeIndex] = frameTime;
-		frameTimeIndex = (frameTimeIndex + 1) % FRAME_TIMES_BUFFER_SIZE;
+		g_frameTimes[frame_time_index] = frameTime;
+		frame_time_index = (frame_time_index + 1) % FRAME_TIMES_BUFFER_SIZE;
 		f64 averageFrameTime = 0.0;
 		for (int i = 0; i < FRAME_TIMES_BUFFER_SIZE; i++) {
 			averageFrameTime += frameTime;
@@ -157,15 +157,13 @@ int main(int argc, char **argv)
 		averageFrameTime /= FRAME_TIMES_BUFFER_SIZE;
 		g_averageMainFrameTime.store(averageFrameTime);
 
-		i64 ticksPerUpdate =
-			bx::getHPFrequency() * ((f64)1.0 / (f64)480.0);
+		i64 ticksPerUpdate = bx::getHPFrequency() * ((f64)1.0 / (f64)480.0);
 
 		i64 ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		while (ticksLeft > 0) {
 			bx::yield();
 			ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		}
-
 	}
 
 	// Wait for the API thread to finish before shutting down.
