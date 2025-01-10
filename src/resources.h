@@ -14,7 +14,7 @@ struct Resources
 	bgfx::ProgramHandle meshProgram;
 	
 	Mesh teapot;
-	//Mesh sponza;
+	Mesh sponza;
 
 	const PosColorVertex cubeVertices[8] =
 	{
@@ -46,6 +46,8 @@ struct Resources
 
 	bgfx::VertexBufferHandle cube_vbh;
 	bgfx::IndexBufferHandle cube_ibh;
+
+	void load_mesh_scene(const std::string& filepath);
 };
 
 bool loadResources();

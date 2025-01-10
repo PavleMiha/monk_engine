@@ -6,11 +6,11 @@
 
 #include "vertex.h"
 
-Group::Group() {
+Mesh::Mesh() {
 	reset();
 }
 
-void Group::reset() {
+void Mesh::reset() {
 	m_vbh = BGFX_INVALID_HANDLE;
 	m_ibh = BGFX_INVALID_HANDLE;
 	m_numVertices = 0;
@@ -39,8 +39,6 @@ void Mesh::load(const std::string& filepath) {
 
 	// Process all meshes in the scene
 	for (unsigned int i = 0; i < scene->mNumMeshes; i++) {
-		Group group;
-
 		aiMesh* mesh = scene->mMeshes[i];
 
 		std::vector<PosNormalTexVertex> vertices;
@@ -72,11 +70,11 @@ void Mesh::load(const std::string& filepath) {
 			vertices.push_back(vertex);
 		}
 
-		group.m_numVertices = vertices.size();
-		size_t verticesSize = sizeof(PosNormalTexVertex) * group.m_numVertices;
-		group.m_vertices = (u8*)malloc(verticesSize);
-		memcpy(group.m_vertices, vertices.data(), verticesSize);
-		group.m_vbh = bgfx::createVertexBuffer(bgfx::makeRef(group.m_vertices, vertices.size() * sizeof(PosNormalTexVertex)), PosNormalTexVertex::ms_layout);
+		m_numVertices = vertices.size();
+		size_t verticesSize = sizeof(PosNormalTexVertex) * m_numVertices;
+		m_vertices = (u8*)malloc(verticesSize);
+		memcpy(m_vertices, vertices.data(), verticesSize);
+		m_vbh = bgfx::createVertexBuffer(bgfx::makeRef(m_vertices, vertices.size() * sizeof(PosNormalTexVertex)), PosNormalTexVertex::ms_layout);
 
 		std::vector<u16> indices;
 
@@ -88,14 +86,12 @@ void Mesh::load(const std::string& filepath) {
 			}
 		}
 
-		group.m_numIndices = indices.size();
-		size_t indicesSize = sizeof(u16) * group.m_numIndices;
-		group.m_indices = (u16*)malloc(indicesSize);
-		memcpy(group.m_indices, indices.data(), indicesSize);
-		group.m_ibh = bgfx::createIndexBuffer(bgfx::makeRef(group.m_indices, indicesSize));
+		m_numIndices = indices.size();
+		size_t indicesSize = sizeof(u16) * m_numIndices;
+		m_indices = (u16*)malloc(indicesSize);
+		memcpy(m_indices, indices.data(), indicesSize);
+		m_ibh = bgfx::createIndexBuffer(bgfx::makeRef(m_indices, indicesSize));
 		
-		//scene->m
-		m_groups.push_back(group);
 		// Output mesh data
 		printf("Mesh %d: \n", i);
 		printf(" - Vertices: %zu\n", vertices.size());
@@ -117,16 +113,16 @@ void Mesh::submit(bgfx::ViewId _id, bgfx::ProgramHandle _program, const float* _
 			;
 	}
 
-	for (std::vector<Group>::const_iterator it = m_groups.begin(), itEnd = m_groups.end(); it != itEnd; ++it)
+	//for (std::vector<Group>::const_iterator it = m_groups.begin(), itEnd = m_groups.end(); it != itEnd; ++it)
 	{
-		const Group& group = *it;
+		//const Group& group = *it;
 
 
 		bgfx::setTransform(_mtx);
 		bgfx::setState(_state);
 
-		bgfx::setIndexBuffer(group.m_ibh);
-		bgfx::setVertexBuffer(0, group.m_vbh);
+		bgfx::setIndexBuffer(m_ibh);
+		bgfx::setVertexBuffer(0, m_vbh);
 		bgfx::submit(
 			_id
 			, _program

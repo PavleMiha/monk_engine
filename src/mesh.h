@@ -17,15 +17,8 @@
 
 struct Group
 {
-	Group();
-	void reset();
 
-	bgfx::VertexBufferHandle m_vbh;
-	bgfx::IndexBufferHandle m_ibh;
-	u16 m_numVertices;
-	u8* m_vertices;
-	u32 m_numIndices;
-	u16* m_indices;
+	
 	
 	float m_localMtx[16];
 
@@ -38,10 +31,19 @@ struct Group
 
 struct Mesh
 {
+	Mesh();
+
+	void reset();
 	void load(const std::string& filepath);
 	void submit(bgfx::ViewId _id, bgfx::ProgramHandle _program, const float* _mtx, uint64_t _state = BGFX_STATE_MASK) const;
 
-	std::vector<Group> m_groups;
+	bgfx::VertexBufferHandle m_vbh;
+	bgfx::IndexBufferHandle m_ibh;
+	u16 m_numVertices;
+	u8* m_vertices;
+	u32 m_numIndices;
+	u16* m_indices;
+
 	bgfx::VertexLayout m_layout;
 };
 

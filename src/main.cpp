@@ -46,12 +46,13 @@ bx::SpScUnboundedQueue s_systemEventsRender(getDefaultAllocator());
 bx::SpScUnboundedQueue s_systemEventsLogic(getDefaultAllocator());
 bx::SpScUnboundedQueue s_keyEvents(getDefaultAllocator());
 
-Resources g_resources;
+Resources		 g_resources;
 std::atomic<i32> g_beingRendered(0);
 std::atomic<i32> g_beingUpdated(0);
-GameState g_gameStates[NUM_GAME_STATES];
+GameState		 g_gameStates[NUM_GAME_STATES];
 
 #define MAIN_LOOP_TIME_BUFFER_SIZE 30
+
 f64				 g_frameTimes[MAIN_LOOP_TIME_BUFFER_SIZE];
 std::atomic<f64> g_averageMainFrameTime;
 

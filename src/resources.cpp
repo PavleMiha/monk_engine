@@ -138,7 +138,7 @@ bool loadResources() {
 	g_resources.meshProgram = loadProgram(s_fileReader, "vs_mesh", "fs_mesh");
 
 	g_resources.teapot.load("teapot.abj");
-	//g_resources.sponza.load("NewSponza_Main_Yup_003.fbx");
+	g_resources.sponza.load("NewSponza_Main_Yup_003.fbx");
 
 	g_resources.cube_vbh = bgfx::createVertexBuffer(
 		bgfx::makeRef(g_resources.cubeVertices, sizeof(g_resources.cubeVertices)),

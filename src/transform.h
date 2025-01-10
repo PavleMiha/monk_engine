@@ -7,10 +7,16 @@
 #include "types.h"
 #include "monk_math.h"
 
+#define NO_PARENT UINT32_MAX
+
 struct Transform
 {
-	vec3 pos = { 0.0f, 0.0f, 0.0f };
-	f32  pitch = 0.0f;
-	f32  yaw = 0.0f;
-	f32  roll = 0.0f;
+	u32  parent;
+	
+	vec3 local_pos;
+	quat local_orientation;
+	vec3 local_scale;
+
+	mat4 world_matrix;
+	b8	 dirty;
 };

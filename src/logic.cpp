@@ -185,7 +185,7 @@ i32 runLogicThread(bx::Thread* self, void* userData) {
 		g_beingUpdated.store(-1);
 
 		i64 ticksPerUpdate =
-			bx::getHPFrequency() * ((f64)1.0 / (f64)60.0);
+			bx::getHPFrequency() * ((f64)1.0 / (f64)240.0);
 		
 		i64 ticksLeft = ticksPerUpdate - (bx::getHPCounter() - lastFrameCounter);
 		while (ticksLeft > 1) {
