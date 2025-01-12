@@ -32,7 +32,7 @@ vec4 lit(float _ndotl, float _rdotv, float _m)
 
 void main()
 {
-	gl_FragColor.xyz = vec4( 1.0, 1.0, 1.0, 1.0 );
+	//gl_FragColor.xyz = vec4( 1.0, 1.0, 1.0, 1.0 );
 	vec3 lightDir = normalize(vec3(-0.2, -1.0, 0.2));
 	vec3 normal = normalize(v_normal);
 	vec3 view = normalize(v_view);

@@ -16,3 +16,6 @@
 [submodule "3rdparty/assimp"]
 	path = 3rdparty/assimp
 	url = https://github.com/assimp/assimp.git
+[submodule "3rdparty/bgfx.cmake"]
+	path = 3rdparty/bgfx.cmake
+	url = https://github.com/bkaradzic/bgfx.cmake

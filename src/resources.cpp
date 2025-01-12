@@ -134,11 +134,11 @@ bool loadResources() {
 		s_fileReader = BX_NEW(getDefaultAllocator(), bx::FileReader);
 		s_fileWriter = BX_NEW(getDefaultAllocator(), bx::FileWriter);
 	}
-	g_resources.vertexColorProgram = loadProgram(s_fileReader, "vs_cubes", "fs_cubes");
-	g_resources.meshProgram = loadProgram(s_fileReader, "vs_mesh", "fs_mesh");
+	g_resources.vertexColorProgram = loadProgram(s_fileReader, "vs_cubes.sc", "fs_cubes.sc");
+	g_resources.meshProgram = loadProgram(s_fileReader, "vs_mesh.sc", "fs_mesh.sc");
 
-	g_resources.teapot.load("teapot.abj");
-	g_resources.sponza.load("NewSponza_Main_Yup_003.fbx");
+	g_resources.teapot.load("assets/teapot.mobj");
+	g_resources.sponza.load("assets/NewSponza_Main_Yup_003.fbx");
 
 	g_resources.cube_vbh = bgfx::createVertexBuffer(
 		bgfx::makeRef(g_resources.cubeVertices, sizeof(g_resources.cubeVertices)),
